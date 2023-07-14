@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Capture</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+            }
+            #config {
+                display: none;
+                position: fixed;
+                top: 10px;
+                left: 10px;
+            }
+            #video-wrapper {
+                display: none;
+                position: relative;
+                overflow: hidden;
+                transform-origin: top left;
+            }
+            #rect {
+                position: absolute;
+                outline: 1px solid #f00;
+                top: 42px;
+                left: 10px;
+                width: 414px;
+                height: 736px;
+            }
+            #start-btn {
+                display: none;
+                margin: 10px;
+            }
+            #tips {
+                display: none;
+                margin: 10px;
+            }
+            button {
+                padding: 2px 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="tips">
+            <div>
+                Download and unzip: <a href="https://github.com/Neco86/Sketch-Measure-Compare/archive/refs/heads/extension.zip">https://github.com/Neco86/Sketch-Measure-Compare/archive/refs/heads/extension.zip</a>
+            </div>
+            <div>
+                Load the unpacked extension and use it.
+            </div>
+        </div>
+        <button id="start-btn">capture</button>
+        <div id="video-wrapper">
+            <video id="video" autoplay></video>
+            <div id="rect"></div>
+        </div>
+        <div id="config">
+            <input id="x" placeholder="x" type="number" />
+            <input id="y" placeholder="y" type="number" />
+            <input id="width" placeholder="width" type="number" />
+            <input id="height" placeholder="height" type="number" />
+            <button id="fullscreen-btn">fullscreen</button>
+        </div>
+        <script>
+            if (window.self === window.top) {
+                window['tips'].style.display = 'block';
+            }
+            else {
+                window['start-btn'].style.display = 'block';
+            }
+            window['start-btn'].onclick = async () => {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        width: { ideal: 1920 * 3, max: 1920 * 3 },
+                        height: { ideal: 1080 * 3, max: 1080 * 3 }
+                    },
+                    audio: false,
+                });
+                window['video'].srcObject = stream;
+                window['start-btn'].style.display = 'none';
+                window['config'].style.display = 'block';
+                window['video-wrapper'].style.display = 'block';
+                window['x'].value = localStorage.getItem('SKETCH_MEASURE_COMPARE_CAPTURE_X') || 30;
+                window['y'].value = localStorage.getItem('SKETCH_MEASURE_COMPARE_CAPTURE_Y') || 30;
+                window['width'].value = localStorage.getItem('SKETCH_MEASURE_COMPARE_CAPTURE_WIDTH') || 414;
+                window['height'].value = localStorage.getItem('SKETCH_MEASURE_COMPARE_CAPTURE_HEIGHT') || 736;
+
+                window['x'].oninput = (e) => {
+                    window['rect'].style.left = `${e.target.value}px`;
+                    localStorage.setItem('SKETCH_MEASURE_COMPARE_CAPTURE_X', e.target.value);
+                };
+                window['y'].oninput = (e) => {
+                    window['rect'].style.top = `${e.target.value}px`;
+                    localStorage.setItem('SKETCH_MEASURE_COMPARE_CAPTURE_Y', e.target.value);
+                };
+                window['width'].oninput = (e) => {
+                    window['rect'].style.width = `${e.target.value}px`;
+                    localStorage.setItem('SKETCH_MEASURE_COMPARE_CAPTURE_WIDTH', e.target.value);
+                };
+                window['height'].oninput = (e) => {
+                    window['rect'].style.height = `${e.target.value}px`;
+                    localStorage.setItem('SKETCH_MEASURE_COMPARE_CAPTURE_HEIGHT', e.target.value);
+                };
+                window['fullscreen-btn'].onclick = () => {
+                    window['config'].style.display = 'none';
+                    window['rect'].style.display = 'none';
+                    window['video-wrapper'].style.width = `${window['width'].value}px`;
+                    window['video-wrapper'].style.height = `${window['height'].value}px`;
+                    window['video-wrapper'].scrollTop = window['y'].value;
+                    window['video-wrapper'].scrollLeft = window['x'].value;
+                    const scale = document.documentElement.clientWidth / window['width'].value;
+                    window['video-wrapper'].style.transform = `scale(${scale})`;
+                };
+                window['video-wrapper'].ondblclick = () => {
+                    if (window['config'].style.display === 'none') {
+                        window['config'].style.display = 'block';
+                        window['rect'].style.display = 'block';
+                        window['video-wrapper'].style.width = '';
+                        window['video-wrapper'].style.height = '';
+                        window['video-wrapper'].scrollTop = 0;
+                        window['video-wrapper'].scrollLeft = 0;
+                        window['video-wrapper'].style.transform = '';
+                    }
+                    else {
+                        window['fullscreen-btn'].onclick();
+                    }
+                }
+            };
+        </script>
+    </body>
+</html>
